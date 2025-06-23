@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./certs:/etc/nginx/certs:ro
+      - ./vhost.d:/etc/nginx/vhost.d
+      - ./html:/usr/share/nginx/html
+    networks:
+      - proxy
+    restart: always
+
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: nginx-proxy-letsencrypt
+    depends_on:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/etc/nginx/certs:rw
+      - ./vhost.d:/etc/nginx/vhost.d
+      - ./html:/usr/share/nginx/html
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+    networks:
+      - proxy
+    restart: always
+
+  app1:
+    image: jwilder/whoami
+    container_name: app1
+    environment:
+      - VIRTUAL_HOST=app1.janeappletree.ru
+      - LETSENCRYPT_HOST=app1.janeappletree.ru
+      - LETSENCRYPT_EMAIL=evgeniiappletree@mail.ru
+    networks:
+      - proxy
+    restart: always
+
+  app2:
+    image: jwilder/whoami
+    container_name: app2
+    environment:
+      - VIRTUAL_HOST=app2.janeappletree.ru
+      - LETSENCRYPT_HOST=app2.janeappletree.ru
+      - LETSENCRYPT_EMAIL=evgeniiappletree@mail.ru
+    networks:
+      - proxy
+    restart: always
+
+  app3:
+    image: jwilder/whoami
+    container_name: app3
+    environment:
+      - VIRTUAL_HOST=app3.janeappletree.ru
+      - LETSENCRYPT_HOST=app3.janeappletree.ru
+      - LETSENCRYPT_EMAIL=evgeniiappletree@mail.ru
+    networks:
+      - proxy
+    restart: always
+
+networks:
+  proxy:
+    driver: bridge
